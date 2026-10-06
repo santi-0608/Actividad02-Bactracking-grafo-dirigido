@@ -1,9 +1,3 @@
-%% UNIVERSIDAD TECNOLOGICA DE PEREIRA
-%% FACULTAD DE INGENIERIAS
-%% INGENIERIA DE SISTEMAS Y COMPUTACION
-%% PROGRAMACION III - Backtracking y SLD
-%% Grafo dirigido: red Vancouver - Winnipeg
-
 % arista(Origen, Destino, Costo) - grafo DIRIGIDO y ponderado.
 % s=vancouver, v1=edmonton, v2=calgary, v3=saskatoon, v4=regina, t=winnipeg
 
