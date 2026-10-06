@@ -1,0 +1,89 @@
+%% UNIVERSIDAD TECNOLOGICA DE PEREIRA
+%% FACULTAD DE INGENIERIAS
+%% INGENIERIA DE SISTEMAS Y COMPUTACION
+%% PROGRAMACION III - Backtracking y SLD
+%% Grafo dirigido: red Vancouver - Winnipeg
+
+% arista(Origen, Destino, Costo) - grafo DIRIGIDO y ponderado.
+% s=vancouver, v1=edmonton, v2=calgary, v3=saskatoon, v4=regina, t=winnipeg
+
+arista(vancouver, edmonton, 16).
+arista(vancouver, calgary, 13).
+arista(calgary, edmonton, 4).
+arista(edmonton, saskatoon, 12).
+arista(saskatoon, calgary, 9).
+arista(calgary, regina, 14).
+arista(regina, saskatoon, 7).
+arista(saskatoon, winnipeg, 20).
+arista(regina, winnipeg, 4).
+
+% -- Pregunta: Existe una conexion entre Saskatoon y Vancouver? --
+% conexion/2: existe un camino dirigido (de 1 o mas saltos) de X a Y.
+% Se controla la lista de nodos visitados porque el grafo tiene ciclos
+% (saskatoon -> calgary -> regina -> saskatoon), para evitar recursion
+% infinita durante el backtracking.
+conexion(X, Y) :- conexion(X, Y, [X]).
+
+conexion(X, Y, _) :- arista(X, Y, _).
+conexion(X, Y, Visitados) :-
+    arista(X, Z, _),
+    \+ member(Z, Visitados),
+    conexion(Z, Y, [Z | Visitados]).
+
+% -- Pregunta: con que nodos esta conectado un nodo y costo de c/u --
+% conectado_con/3: nodos alcanzables en un solo salto desde Nodo (saliente)
+% y el costo de esa conexion directa.
+conectado_con(Nodo, Vecino, Costo) :- arista(Nodo, Vecino, Costo).
+
+% -- Regla: determinar si un nodo tiene aristas (entrantes o salientes) --
+tiene_aristas(Nodo) :- arista(Nodo, _, _).
+tiene_aristas(Nodo) :- arista(_, Nodo, _).
+
+% -- Regla: costo de ir de X a Z pasando por Y --
+costo_via(X, Y, Z, CostoTotal) :-
+    arista(X, Y, C1),
+    arista(Y, Z, C2),
+    CostoTotal is C1 + C2.
+
+% -- Pregunta mas interesante: es posible viajar de Edmonton a Calgary? --
+% (reutiliza conexion/2, que resuelve alcanzabilidad con backtracking)
+
+
+%% CONSULTAS DE VALIDACION
+
+
+print_query(Goal, Var) :-
+    findall(Var, Goal, L0),
+    sort(L0, L),
+    ( L == []
+    -> write('   (sin resultados / no existe solucion)'), nl
+    ;  forall(member(V, L), (format('   X = ~w~n', [V])))
+    ).
+
+:- initialization(main).
+
+main :-
+    nl, write('=== Grafo dirigido (Vancouver - Winnipeg) ==='), nl,
+
+    write('?- conexion(saskatoon, vancouver).  (existe conexion Saskatoon -> Vancouver?)'), nl,
+    ( conexion(saskatoon, vancouver)
+    -> write('   true.')
+    ;  write('   false. (Vancouver es la fuente: no tiene aristas entrantes)') ), nl,
+
+    write('?- conectado_con(regina, X, Costo).  (nodos y costo conectados desde Regina)'), nl,
+    forall(conectado_con(regina, X, Costo), format('   ~w -> ~w, costo = ~w~n', [regina, X, Costo])),
+
+    write('?- tiene_aristas(X).  (todos los nodos con al menos una arista)'), nl,
+    print_query(tiene_aristas(X), X),
+
+    write('?- costo_via(vancouver, calgary, regina, Costo).'), nl,
+    ( costo_via(vancouver, calgary, regina, CostoVCR)
+    -> format('   Costo = ~w~n', [CostoVCR])
+    ;  write('   false.') ), nl,
+
+    write('?- conexion(edmonton, calgary).  (es posible viajar de Edmonton a Calgary?)'), nl,
+    ( conexion(edmonton, calgary)
+    -> write('   true. (Si es posible: edmonton -> saskatoon -> calgary)')
+    ;  write('   false.') ), nl,
+
+    nl.
